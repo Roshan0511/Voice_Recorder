@@ -1,40 +1,31 @@
 package com.roshanjha.voicerecorder.items
 
 import android.media.MediaMetadataRetriever
-import android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -48,9 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -58,8 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.roshanjha.voicerecorder.R
 import com.roshanjha.voicerecorder.models.RecordingData
 import com.roshanjha.voicerecorder.mvvm.RecordingViewModel
@@ -72,15 +59,16 @@ import java.io.File
 @Stable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordingItem(data: RecordingData,
+fun DeletedItem(data: RecordingData,
                   onItemClick: (Boolean) -> Unit,
                   onStart : (Float) -> Unit,
                   onProgress: (Float) -> Unit,
                   onPause: () -> Unit,
-                  onFavorite: (Boolean) -> Unit,
+                  onRecover: () -> Unit,
                   onDelete: (RecordingData) -> Unit,
                   player: AndroidAudioPlayer,
-                  viewModel: RecordingViewModel) {
+                  viewModel: RecordingViewModel
+) {
 
     val context = LocalContext.current
 
@@ -98,10 +86,6 @@ fun RecordingItem(data: RecordingData,
         mutableStateOf(false)
     }
 
-    var isFavorite by remember {
-        mutableStateOf(data.isFav)
-    }
-
     var isDeleteButtonClicked by remember {
         mutableStateOf(false)
     }
@@ -114,7 +98,7 @@ fun RecordingItem(data: RecordingData,
 
     val mmr = MediaMetadataRetriever()
     mmr.setDataSource(data.filePath)
-    val length = mmr.extractMetadata(METADATA_KEY_DURATION)
+    val length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
     val timeInMilliSec: Long = length!!.toLong()
 
     Box(Modifier.clickable {
@@ -194,16 +178,13 @@ fun RecordingItem(data: RecordingData,
                     modifier = Modifier.padding(bottom = 10.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Icon(imageVector = if (!data.isFav) Icons.Outlined.FavoriteBorder else Icons.Filled.Favorite,
-                        contentDescription = "fav_border_icon",
-                        tint = Blue, modifier = Modifier
-                            .size(28.dp)
-                            .padding(all = 3.dp)
-                            .clip(RoundedCornerShape(7.5.dp))
-                            .clickable {
-                                isFavorite = !isFavorite
-                                onFavorite(isFavorite)
-                            })
+                    Text(
+                        text = "Recover",
+                        fontSize = 14.sp,
+                        color = Blue,
+                        modifier = Modifier.clickable {
+                            onRecover()
+                        })
 
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         Icon(painter = painterResource(id = if (isPlay) R.drawable.stop_icon else R.drawable.play_icon),
@@ -261,22 +242,19 @@ fun RecordingItem(data: RecordingData,
                                 .padding(5.dp), tint = if (isPlay) Color.Red else MaterialTheme.colorScheme.onPrimary)
                     }
 
-                    Icon(
-                        painterResource(id = R.drawable.delete_icon),
-                        contentDescription = "fav_border_icon",
-                        tint = Blue, modifier = Modifier
-                            .size(28.dp)
-                            .padding(all = 3.dp)
-                            .clip(RoundedCornerShape(7.5.dp))
-                            .clickable {
-                                isDeleteButtonClicked = true
-                            })
+                    Text(
+                        text = "Delete",
+                        fontSize = 14.sp,
+                        color = Blue,
+                        modifier = Modifier.clickable {
+                            isDeleteButtonClicked = true
+                        })
                 }
             }
         }
     }
-    
-    
+
+
     if (isDeleteButtonClicked) {
         DeleteRecordingDialog(fileName = data.fileName, onDismiss = {
             isDeleteButtonClicked = false
@@ -304,56 +282,4 @@ private fun Long.convertToText(): String {
         seconds.toString()
     }
     return "$minutesString:$secondsString"
-}
-
-
-
-
-
-
-@Composable
-fun DeleteRecordingDialog(fileName: String, onDismiss: ()-> Unit, onDelete: ()-> Unit) {
-    Dialog(
-        onDismissRequest = { onDismiss() },
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                Modifier
-                    .pointerInput(Unit) { detectTapGestures { } }
-                    .shadow(8.dp, shape = RoundedCornerShape(16.dp))
-                    .padding(horizontal = 20.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        MaterialTheme.colorScheme.surface,
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Are you sure you want to delete this recording?", Modifier.padding(bottom = 10.dp), fontSize = 14.sp, textAlign = TextAlign.Center)
-                    Text(text = fileName, fontSize = 15.sp, fontWeight = FontWeight.W600, modifier = Modifier.padding(bottom = 15.dp))
-                    Row {
-                        OutlinedButton(onClick = { onDismiss() }, modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 5.dp), border = BorderStroke(width = 1.5.dp, color = Blue)
-                        ) {
-                            Text(text = "Cancel", color = Blue)
-                        }
-                        OutlinedButton(onClick = { onDelete() }, modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 5.dp), colors = ButtonDefaults.buttonColors(Blue), border = BorderStroke(width = 0.dp, color = Blue)
-                        ) {
-                            Text(text = "Delete", color = Color.White)
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

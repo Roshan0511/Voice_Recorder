@@ -14,5 +14,6 @@ data class RecordingData (
     val fileName: String,
     val time: String,
     val date: String,
-    val isFav: Boolean) :
+    val isFav: Boolean,
+    val isInTrash: Boolean = false) :
     Serializable

@@ -17,8 +17,14 @@ interface Dao {
     @Update
     suspend fun updateRecording(recordingData: RecordingData)
 
-    @Query("SELECT * FROM RecordingData ORDER BY id DESC")
+    @Query("SELECT * FROM RecordingData WHERE isInTrash=0 ORDER BY id DESC")
     fun getAllRecordings(): LiveData<List<RecordingData>>
+
+    @Query("SELECT * FROM RecordingData WHERE isInTrash=0 AND isFav=1 ORDER BY id DESC")
+    fun getFavRecordings(): LiveData<List<RecordingData>>
+
+    @Query("SELECT * FROM RecordingData WHERE isInTrash=1 ORDER BY id DESC")
+    fun getTrashData(): LiveData<List<RecordingData>>
 
     @Query("SELECT * FROM RecordingData WHERE fileName LIKE :query OR filePath LIKE :query OR date LIKE :query ORDER BY id DESC")
     fun searchRecording(query: String): LiveData<List<RecordingData>>

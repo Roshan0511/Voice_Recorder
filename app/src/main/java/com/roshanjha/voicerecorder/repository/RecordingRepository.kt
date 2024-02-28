@@ -9,6 +9,11 @@ class RecordingRepository(
     fun getRecordings() =
         db.getRecordingDao().getAllRecordings()
 
+    fun getFavRecordings() =
+        db.getRecordingDao().getFavRecordings()
+
+    fun getTrashData() = db.getRecordingDao().getTrashData()
+
     fun searchRecording(query: String) =
         db.getRecordingDao().searchRecording(query)
 
