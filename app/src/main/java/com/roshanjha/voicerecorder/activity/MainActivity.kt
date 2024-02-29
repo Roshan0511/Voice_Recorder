@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +60,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.roshanjha.voicerecorder.R
 import com.roshanjha.voicerecorder.components.RecordButton
 import com.roshanjha.voicerecorder.db.RecordingDatabase
 import com.roshanjha.voicerecorder.items.RecordingItem
@@ -166,8 +169,14 @@ fun HomeScreen(viewModel: RecordingViewModel, recorder: AndroidAudioRecorder, pl
                         modifier = Modifier
                             .wrapContentWidth()
                             .align(Alignment.CenterVertically)
-                            .padding(end = 10.dp).clickable {
-                                context.startActivity(Intent(context, FavRecordingActivity::class.java))
+                            .padding(end = 10.dp)
+                            .clickable {
+                                context.startActivity(
+                                    Intent(
+                                        context,
+                                        FavRecordingActivity::class.java
+                                    )
+                                )
                             },
                         text = "Favourites", color = Blue,
                         textAlign = TextAlign.End, fontWeight = FontWeight.Normal, fontSize = 15.sp
@@ -195,17 +204,9 @@ fun HomeScreen(viewModel: RecordingViewModel, recorder: AndroidAudioRecorder, pl
                         .weight(1f)
                         .fillMaxWidth(),
                         contentAlignment = Alignment.Center) {
-                        Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(MaterialTheme.colorScheme.onSurface)) {
-                            Text(
-                                text = "No Data",
-                                textAlign = TextAlign.Center,
-                                fontFamily = FontFamily.Serif,
-                                fontWeight = FontWeight.W500,
-                                fontSize = 17.sp,
-                                fontStyle = FontStyle.Italic,
-                                modifier = Modifier.padding(all = 15.dp)
-                            )
-                        }
+                        Image(painter = painterResource(id = R.drawable.no_data),
+                            contentDescription = "no_data",
+                            modifier = Modifier.size(128.dp))
                     }
                 } else {
                     LazyColumn(state = listState, content = {
