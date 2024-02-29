@@ -1,16 +1,15 @@
 package com.roshanjha.voicerecorder.activity
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -124,6 +124,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Stable
 @Composable
 fun HomeScreen(viewModel: RecordingViewModel, recorder: AndroidAudioRecorder, player: AndroidAudioPlayer) {
@@ -182,6 +183,7 @@ fun HomeScreen(viewModel: RecordingViewModel, recorder: AndroidAudioRecorder, pl
                 var list: MutableList<RecordingData> by remember {
                     mutableStateOf(mutableListOf())
                 }
+                val listState = rememberLazyListState()
 
                 viewModel.getAllRecordings().observe(lifecycleOwner) {
                     list = it as MutableList<RecordingData>
@@ -206,8 +208,8 @@ fun HomeScreen(viewModel: RecordingViewModel, recorder: AndroidAudioRecorder, pl
                         }
                     }
                 } else {
-                    LazyColumn(content = {
-                        itemsIndexed(items = list) { index, recording ->
+                    LazyColumn(state = listState, content = {
+                        itemsIndexed(items = list) { _, recording ->
                             RecordingItem(data = recording, onItemClick = {
                                 if (it) {
                                     viewModel.selectedItemPosition.postValue(recording.id)

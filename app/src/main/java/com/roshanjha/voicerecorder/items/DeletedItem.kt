@@ -101,155 +101,154 @@ fun DeletedItem(data: RecordingData,
     val length = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
     val timeInMilliSec: Long = length!!.toLong()
 
-    Box(Modifier.clickable {
-        isItemClicked = !isItemClicked
-        onItemClick(isItemClicked)
-    }) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp)
-            .animateContentSize(
-                animationSpec = tween(
-                    durationMillis = 200,
-                    easing = LinearOutSlowInEasing
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable {
+            isItemClicked = !isItemClicked
+            onItemClick(isItemClicked)
+        }
+        .padding(horizontal = 10.dp)
+        .animateContentSize(
+            animationSpec = tween(
+                durationMillis = 200,
+                easing = LinearOutSlowInEasing
+            )
+        ),) {
+        Divider(Modifier.padding(bottom = 5.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = data.fileName, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            if (!File(data.filePath).exists()) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "corrupt_icon",
+                    tint = Color.Red,
+                    modifier = Modifier.size(16.dp)
                 )
-            ),) {
-            Divider(Modifier.padding(bottom = 5.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = data.fileName, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                if (!File(data.filePath).exists()) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "corrupt_icon",
-                        tint = Color.Red,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
             }
-            Row(modifier = Modifier.padding(top = 5.dp, bottom = if (isItemClicked) 12.5.dp else 5.dp)) {
+        }
+        Row(modifier = Modifier.padding(top = 5.dp, bottom = if (isItemClicked) 12.5.dp else 5.dp)) {
+            Text(
+                text = data.date.uppercase(),
+                modifier = Modifier.weight(1f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Light
+            )
+            Text(text = data.time.uppercase(), fontSize = 13.sp, fontWeight = FontWeight.Light)
+        }
+
+        if (isItemClicked) {
+            Slider(
+                modifier = Modifier.height(20.dp),
+                value = progressValue,
+                onValueChange = {
+                    progressValue = it
+                    onProgress(it)
+                },
+                valueRange = 0f..timeInMilliSec.toFloat(),
+                thumb = {
+                    Spacer(
+                        modifier = Modifier
+                            .size(ButtonDefaults.IconSize)
+                            .padding(all = 3.dp)
+                            .clip(CircleShape)
+                            .background(color = if (isSystemInDarkTheme()) LightGray else DarkGray)
+                    )
+                },
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.secondary,
+                    activeTrackColor = MaterialTheme.colorScheme.secondary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+            )
+            Row(modifier = Modifier.padding(start = 7.5.dp, end = 7.5.dp, bottom = 7.5.dp)) {
                 Text(
-                    text = data.date.uppercase(),
+                    text = progressValue.toLong().convertToText(),
                     modifier = Modifier.weight(1f),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Light
+                    fontSize = 12.sp
                 )
-                Text(text = data.time.uppercase(), fontSize = 13.sp, fontWeight = FontWeight.Light)
+                Text(
+                    text = timeInMilliSec.convertToText(),
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.End,
+                    fontSize = 12.sp
+                )
             }
 
-            if (isItemClicked) {
-                Slider(
-                    modifier = Modifier.height(20.dp),
-                    value = progressValue,
-                    onValueChange = {
-                        progressValue = it
-                        onProgress(it)
-                    },
-                    valueRange = 0f..timeInMilliSec.toFloat(),
-                    thumb = {
-                        Spacer(
-                            modifier = Modifier
-                                .size(ButtonDefaults.IconSize)
-                                .padding(all = 3.dp)
-                                .clip(CircleShape)
-                                .background(color = if (isSystemInDarkTheme()) LightGray else DarkGray)
-                        )
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.secondary,
-                        activeTrackColor = MaterialTheme.colorScheme.secondary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
-                    ),
-                )
-                Row(modifier = Modifier.padding(start = 7.5.dp, end = 7.5.dp, bottom = 7.5.dp)) {
-                    Text(
-                        text = progressValue.toLong().convertToText(),
-                        modifier = Modifier.weight(1f),
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = timeInMilliSec.convertToText(),
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.End,
-                        fontSize = 12.sp
-                    )
-                }
+            Row(
+                modifier = Modifier.padding(bottom = 10.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    text = "Recover",
+                    fontSize = 14.sp,
+                    color = Blue,
+                    modifier = Modifier.clickable {
+                        onRecover()
+                    })
 
-                Row(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        text = "Recover",
-                        fontSize = 14.sp,
-                        color = Blue,
-                        modifier = Modifier.clickable {
-                            onRecover()
-                        })
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Icon(painter = painterResource(id = if (isPlay) R.drawable.stop_icon else R.drawable.play_icon),
+                        contentDescription = "play_pause",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                if (!player.isPlayingSomething()) {
+                                    isPlay = !isPlay
+                                    if (isPlay) {
+                                        onStart(progressValue)
 
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Icon(painter = painterResource(id = if (isPlay) R.drawable.stop_icon else R.drawable.play_icon),
-                            contentDescription = "play_pause",
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .clickable {
-                                    if (!player.isPlayingSomething()) {
-                                        isPlay = !isPlay
-                                        if (isPlay) {
-                                            onStart(progressValue)
-
-                                            handler.post(object : Runnable {
-                                                override fun run() {
-                                                    if (!isPlay) {
-                                                        progressValue = 0.0f
-                                                        player.stop()
-                                                        handler.removeMessages(0)
-                                                    }
-                                                    progressValue =
-                                                        player
-                                                            .getCurrentPosition()
-                                                            .toFloat()
-
-                                                    if (isPlay) {
-                                                        if (player
-                                                                .getCurrentPosition()
-                                                                .toFloat() >= timeInMilliSec.toFloat()
-                                                        ) {
-                                                            isPlay = false
-                                                        }
-                                                        handler.postDelayed(this, 1000)
-                                                    }
+                                        handler.post(object : Runnable {
+                                            override fun run() {
+                                                if (!isPlay) {
+                                                    progressValue = 0.0f
+                                                    player.stop()
+                                                    handler.removeMessages(0)
                                                 }
-                                            })
-                                        } else {
-                                            onPause()
-                                        }
+                                                progressValue =
+                                                    player
+                                                        .getCurrentPosition()
+                                                        .toFloat()
+
+                                                if (isPlay) {
+                                                    if (player
+                                                            .getCurrentPosition()
+                                                            .toFloat() >= timeInMilliSec.toFloat()
+                                                    ) {
+                                                        isPlay = false
+                                                    }
+                                                    handler.postDelayed(this, 1000)
+                                                }
+                                            }
+                                        })
                                     } else {
-                                        if (isPlay) {
-                                            onPause()
-                                            isPlay = !isPlay
-                                        } else {
-                                            Toast
-                                                .makeText(
-                                                    context,
-                                                    "Media is already playing",
-                                                    Toast.LENGTH_SHORT
-                                                )
-                                                .show()
-                                        }
+                                        onPause()
+                                    }
+                                } else {
+                                    if (isPlay) {
+                                        onPause()
+                                        isPlay = !isPlay
+                                    } else {
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "Media is already playing",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
                                     }
                                 }
-                                .padding(5.dp), tint = if (isPlay) Color.Red else MaterialTheme.colorScheme.onPrimary)
-                    }
-
-                    Text(
-                        text = "Delete",
-                        fontSize = 14.sp,
-                        color = Blue,
-                        modifier = Modifier.clickable {
-                            isDeleteButtonClicked = true
-                        })
+                            }
+                            .padding(5.dp), tint = if (isPlay) Color.Red else MaterialTheme.colorScheme.onPrimary)
                 }
+
+                Text(
+                    text = "Delete",
+                    fontSize = 14.sp,
+                    color = Blue,
+                    modifier = Modifier.clickable {
+                        isDeleteButtonClicked = true
+                    })
             }
         }
     }
